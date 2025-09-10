@@ -9,7 +9,7 @@ import {
 } from 'app/utils/common';
 import type { PRNGFunction } from 'ts-seedrandom';
 import type { Server } from 'app/interfaces/models/game/server';
-import { items } from 'app/(game)/(village-slug)/assets/items';
+import { items } from 'app/assets/items';
 
 const [miscellaneousHeroItems, wearableAndArtifactItems] = partition(
   items,
@@ -50,7 +50,7 @@ export const worldItemsFactory = ({
   const tilesWithSize: TileWithSize[] = eligibleTiles.map((tile) => {
     return {
       ...tile,
-      size: getVillageSize(server.configuration.mapSize, tile.id),
+      size: getVillageSize(server.configuration.mapSize, tile.coordinates),
     };
   });
 

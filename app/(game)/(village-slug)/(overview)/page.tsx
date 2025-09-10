@@ -8,23 +8,20 @@ import {
   BreadcrumbSeparator,
 } from 'app/components/ui/breadcrumb';
 import { Text } from 'app/components/text';
-import { useGameNavigation } from 'app/(game)/(village-slug)/hooks/routes/use-game-navigation';
 import { TroopTrainingQueue } from 'app/(game)/(village-slug)/(overview)/components/troop-training-queue';
 import { Section } from 'app/(game)/(village-slug)/components/building-layout';
 import { AcademyResearchTable } from 'app/(game)/(village-slug)/components/academy-research-table';
 import { SmithyImprovementTable } from 'app/(game)/(village-slug)/components/smithy-improvement-table';
 import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
 import { useTribe } from 'app/(game)/(village-slug)/hooks/use-tribe';
-import type React from 'react';
 import type { Route } from '.react-router/types/app/(game)/(village-slug)/(overview)/+types/page';
 import { Separator } from 'app/components/ui/separator';
 
-const OverviewPage: React.FC<Route.ComponentProps> = ({ params }) => {
+const OverviewPage = ({ params }: Route.ComponentProps) => {
   const { serverSlug, villageSlug } = params;
 
   const { t } = useTranslation();
   const { t: assetsT } = useTranslation();
-  const { resourcesPath } = useGameNavigation();
   const { currentVillage } = useCurrentVillage();
   const tribe = useTribe();
 
@@ -54,7 +51,7 @@ const OverviewPage: React.FC<Route.ComponentProps> = ({ params }) => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink to={resourcesPath}>{t('Resources')}</BreadcrumbLink>
+            <BreadcrumbLink to="../resources">{t('Resources')}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>{t('Village overview')}</BreadcrumbItem>

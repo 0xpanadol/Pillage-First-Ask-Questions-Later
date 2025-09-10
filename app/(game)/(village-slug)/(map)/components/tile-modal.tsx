@@ -5,7 +5,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from 'app/components/ui/dialog';
-import type React from 'react';
 import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
 import { useVillages } from 'app/(game)/(village-slug)/hooks/use-villages';
 import {
@@ -24,7 +23,7 @@ import type {
   Tile,
 } from 'app/interfaces/models/game/tile';
 import { useTranslation } from 'react-i18next';
-import { parseCoordinatesFromTileId, parseRFCFromTile } from 'app/utils/map';
+import { parseRFCFromTile } from 'app/utils/map';
 import { useTilePlayer } from 'app/(game)/(village-slug)/(map)/components/hooks/use-tile-player';
 import { Resources } from 'app/(game)/(village-slug)/components/resources';
 import { Button } from 'app/components/ui/button';
@@ -39,16 +38,20 @@ import {
   playerTroopsCacheKey,
   playerVillagesCacheKey,
 } from 'app/(game)/(village-slug)/constants/query-keys';
-import { getPlayerName } from 'app/(game)/(village-slug)/utils/player';
 import { useNavigate } from 'react-router';
-import { getVillageName } from 'app/(game)/(village-slug)/utils/village';
+import { PLAYER_ID } from 'app/constants/player';
+import {
+  calculateDistanceBetweenPoints,
+  roundToNDecimalPoints,
+} from 'app/utils/common';
+import type { ComponentProps } from 'react';
 
 type TileModalResourcesProps = {
   tile: OccupiableTile;
 };
 
-const TileModalResources: React.FC<TileModalResourcesProps> = ({ tile }) => {
-  const resources = parseRFCFromTile(tile.RFC, 'number');
+const TileModalResources = ({ tile }: TileModalResourcesProps) => {
+  const resources = parseRFCFromTile(tile.RFC);
   return (
     <div className="flex justify-start text-sm">
       <Resources
@@ -63,11 +66,17 @@ type TileModalProps = {
   tile: Tile;
 };
 
-const TileModalLocation: React.FC<TileModalProps> = ({ tile }) => {
+const TileModalLocation = ({ tile }: TileModalProps) => {
   const { t } = useTranslation();
-  const { getDistanceFromCurrentVillage } = useCurrentVillage();
-  const distance = getDistanceFromCurrentVillage(tile.id);
-  const { x, y } = parseCoordinatesFromTileId(tile.id);
+  const { currentVillage } = useCurrentVillage();
+
+  const distance = roundToNDecimalPoints(
+    calculateDistanceBetweenPoints(
+      currentVillage.coordinates,
+      tile.coordinates,
+    ),
+  );
+  const { x, y } = tile.coordinates;
 
   return (
     <span className="text-xs text-gray-500">
@@ -76,7 +85,7 @@ const TileModalLocation: React.FC<TileModalProps> = ({ tile }) => {
   );
 };
 
-const TileModalPlayerInfo: React.FC<TileModalProps> = ({ tile }) => {
+const TileModalPlayerInfo = ({ tile }: TileModalProps) => {
   const { t } = useTranslation();
   const { t: assetsT } = useTranslation();
   const { player, reputation, population } = useTilePlayer(tile.id);
@@ -87,7 +96,7 @@ const TileModalPlayerInfo: React.FC<TileModalProps> = ({ tile }) => {
   return (
     <div className="flex flex-col gap-2">
       <span>
-        {t('Player')} - {getPlayerName(name)}
+        {t('Player')} - {name}
       </span>
       {faction !== 'player' && (
         <>
@@ -114,7 +123,7 @@ type OasisTileModalProps = {
   tile: OasisTile;
 };
 
-const OasisTileModal: React.FC<OasisTileModalProps> = ({ tile }) => {
+const OasisTileModal = ({ tile }: OasisTileModalProps) => {
   const { t } = useTranslation();
   const { t: assetsT } = useTranslation();
   const { getVillageByOasis } = useVillages();
@@ -158,14 +167,14 @@ const OasisTileModal: React.FC<OasisTileModalProps> = ({ tile }) => {
           <>
             {isOccupied && (
               <>
-                {ownedBy === 'player' &&
+                {ownedBy === PLAYER_ID &&
                   t(
                     'This oasis is occupied by you and is producing resources for village {{villageName}}.',
                     {
                       villageName: occupiedByVillage!.name,
                     },
                   )}
-                {ownedBy !== 'player' &&
+                {ownedBy !== PLAYER_ID &&
                   t(
                     'This oasis is occupied by another player. You can raid it, but doing so may trigger retaliations.',
                   )}
@@ -189,7 +198,7 @@ type OccupiableTileModalProps = {
   tile: OccupiableTile;
 };
 
-const OccupiableTileModal: React.FC<OccupiableTileModalProps> = ({ tile }) => {
+const OccupiableTileModal = ({ tile }: OccupiableTileModalProps) => {
   const { t } = useTranslation();
   const { events } = useEvents();
 
@@ -251,12 +260,12 @@ type OccupiedOccupiableTileModalProps = {
   tile: OccupiedOccupiableTile;
 };
 
-const OccupiedOccupiableTileModal: React.FC<
-  OccupiedOccupiableTileModalProps
-> = ({ tile }) => {
+const OccupiedOccupiableTileModal = ({
+  tile,
+}: OccupiedOccupiableTileModalProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getVillageById } = useVillages();
+  const { getVillageByCoordinates } = useVillages();
   const { currentVillage } = useCurrentVillage();
   const { getNewVillageUrl } = useGameNavigation();
   const { playerTroops, sendTroops } = usePlayerTroops();
@@ -270,7 +279,7 @@ const OccupiedOccupiableTileModal: React.FC<
     ({ unitId }) => unitId === 'HERO',
   );
 
-  const village = getVillageById(tile.id)!;
+  const village = getVillageByCoordinates(tile.coordinates)!;
   const isOwnedByPlayer = isPlayerVillage(village);
 
   const onSendHero = () => {
@@ -291,7 +300,7 @@ const OccupiedOccupiableTileModal: React.FC<
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{getVillageName(village.name)}</DialogTitle>
+        <DialogTitle>{village.name}</DialogTitle>
         <TileModalLocation tile={tile} />
         <TileModalResources tile={tile} />
         <DialogDescription>
@@ -330,11 +339,11 @@ const OccupiedOccupiableTileModal: React.FC<
   );
 };
 
-type TileDialogProps = React.ComponentProps<typeof Dialog> & {
+type TileDialogProps = ComponentProps<typeof Dialog> & {
   tile: Tile | null;
 };
 
-export const TileDialog: React.FC<TileDialogProps> = ({ tile }) => {
+export const TileDialog = ({ tile }: TileDialogProps) => {
   if (!tile) {
     return null;
   }

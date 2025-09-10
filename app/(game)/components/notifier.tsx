@@ -109,8 +109,12 @@ const eventCreatedNotificationFactory: NotificationFactory = (
   return undefined;
 };
 
-export const Notifier = () => {
-  const { apiWorker } = useApiWorker();
+type NotifierProps = {
+  serverSlug: Server['slug'];
+};
+
+export const Notifier = ({ serverSlug }: NotifierProps) => {
+  const { apiWorker } = useApiWorker(serverSlug);
   const { preferences } = usePreferences();
   const { t } = useTranslation();
   const notificationPermission = useNotificationPermission();

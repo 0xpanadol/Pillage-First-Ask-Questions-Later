@@ -28,7 +28,6 @@ import { serverFactory } from 'app/factories/server-factory';
 import type { CreateServerWorkerPayload } from 'app/(public)/(create-new-server)/workers/create-new-server-worker';
 import CreateServerWorker from 'app/(public)/(create-new-server)/workers/create-new-server-worker?worker&url';
 import { workerFactory } from 'app/utils/workers';
-import { toast } from 'sonner';
 
 const formSchema = z.object({
   seed: z.string().min(1, { error: t('Seed is required') }),
@@ -38,11 +37,11 @@ const formSchema = z.object({
       .enum(['1', '2', '3', '5', '10'])
       // @ts-expect-error: I don't know how to solve this one, speed is expected to be number, but if I use z.literal to use exact numbers
       // fom completely breaks
-      .overwrite((val) => Number.parseInt(val)),
+      .overwrite((val) => Number.parseInt(val, 10)),
     mapSize: z
       .enum(['100', '200', '300'])
       // @ts-expect-error
-      .overwrite((val) => Number.parseInt(val)),
+      .overwrite((val) => Number.parseInt(val, 10)),
   }),
   playerConfiguration: z.object({
     name: z.string().min(1, { error: t('Player name is required') }),
@@ -78,7 +77,6 @@ export const CreateNewServerForm = () => {
     onSuccess: (_, { server }) => {
       addServer({ server });
       navigate(`/game/${server.slug}/v-1/resources`);
-      toast.success(t('Server successfully created! Redirecting...'));
     },
     onError: (_, { server }) => deleteServer({ server }),
   });
@@ -268,6 +266,7 @@ export const CreateNewServerForm = () => {
         </div>
         <div className="flex justify-end">
           <Button
+            size="fit"
             disabled={isPending || isSuccess}
             type="submit"
           >

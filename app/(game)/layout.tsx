@@ -3,16 +3,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ApiProvider } from 'app/(game)/providers/api-provider';
 import { loadAppTranslations } from 'app/localization/loaders/app';
-import { Suspense, useEffect, useState } from 'react';
+import { memo, Suspense, useEffect, useState } from 'react';
 import {
   Link,
   Outlet,
-  redirect,
-  useLoaderData,
+  type ShouldRevalidateFunction,
   useRouteError,
 } from 'react-router';
 import { Notifier } from 'app/(game)/components/notifier';
 import { Skeleton } from 'app/components/ui/skeleton';
+import { Toaster, type ToasterProps } from 'sonner';
+import { useMediaQuery } from 'app/(game)/(village-slug)/hooks/dom/use-media-query';
+import { serverExistAndLockMiddleware } from 'app/(game)/middlewares/server-already-open-middleware';
 
 export const clientLoader = async ({ context }: Route.ClientLoaderArgs) => {
   const { sessionContext } = await import('app/context/session');
@@ -28,45 +30,9 @@ export const clientLoader = async ({ context }: Route.ClientLoaderArgs) => {
   };
 };
 
-// Check whether server even exists && whether server is already opened in another tab
-const serverExistAndLockMiddleware: Route.unstable_ClientMiddlewareFunction =
-  async ({ context, params }) => {
-    const { sessionContext } = await import('app/context/session');
-
-    const { serverSlug } = params;
-
-    const { sessionId } = context.get(sessionContext);
-
-    const lockManager = await window.navigator.locks.query();
-
-    // Check if there exists a lock with server slug. If yes, we check if current sessionId matches.
-    // If it doesn't, it means the same server was opened in a different tab
-    const lock = lockManager.held!.find((lock) =>
-      lock?.name?.startsWith(serverSlug!),
-    );
-
-    if (lock) {
-      const [, lockSessionId] = lock.name!.split(':');
-
-      if (lockSessionId !== sessionId) {
-        throw redirect('/error/403');
-      }
-    }
-
-    const root = await navigator.storage.getDirectory();
-    const rootHandle = await root.getDirectoryHandle(
-      'pillage-first-ask-questions-later',
-      {
-        create: true,
-      },
-    );
-
-    try {
-      await rootHandle.getFileHandle(`${serverSlug}.json`);
-    } catch (_error) {
-      throw redirect('/error/404');
-    }
-  };
+export const shouldRevalidate: ShouldRevalidateFunction = () => {
+  return false;
+};
 
 export const unstable_clientMiddleware = [serverExistAndLockMiddleware];
 
@@ -136,48 +102,62 @@ const LayoutFallback = () => {
   );
 };
 
-const Layout = ({ params }: Route.ComponentProps) => {
-  const { serverSlug } = params;
+const Layout = memo<Route.ComponentProps>(
+  ({ params, loaderData }) => {
+    const { serverSlug } = params;
+    const { sessionId } = loaderData;
 
-  const { sessionId } = useLoaderData<typeof clientLoader>();
+    const isWiderThanLg = useMediaQuery('(min-width: 1024px)');
 
-  const [queryClient] = useState<QueryClient>(
-    new QueryClient({
-      defaultOptions: {
-        queries: {
-          networkMode: 'always',
+    const [queryClient] = useState<QueryClient>(
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            networkMode: 'always',
+          },
+          mutations: {
+            networkMode: 'always',
+          },
         },
-        mutations: {
-          networkMode: 'always',
-        },
-      },
-    }),
-  );
+      }),
+    );
 
-  useEffect(() => {
-    const { promise, resolve } = Promise.withResolvers();
+    const toasterPosition: ToasterProps['position'] = isWiderThanLg
+      ? 'bottom-right'
+      : 'top-right';
 
-    navigator.locks.request(`${serverSlug}:${sessionId}`, () => promise);
+    useEffect(() => {
+      const { promise, resolve } = Promise.withResolvers();
 
-    return () => {
-      resolve(null);
-    };
-  }, [serverSlug, sessionId]);
+      navigator.locks.request(`${serverSlug}:${sessionId}`, () => promise);
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Suspense fallback={<LayoutFallback />}>
-        <ApiProvider>
-          <Outlet />
-          <Notifier />
-        </ApiProvider>
-      </Suspense>
-      <ReactQueryDevtools
-        client={queryClient}
-        initialIsOpen={false}
-      />
-    </QueryClientProvider>
-  );
-};
+      return () => {
+        resolve(null);
+      };
+    }, [serverSlug, sessionId]);
+
+    return (
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={<LayoutFallback />}>
+          <ApiProvider serverSlug={serverSlug}>
+            <Outlet />
+            <Notifier serverSlug={serverSlug} />
+          </ApiProvider>
+        </Suspense>
+        <Toaster
+          position={toasterPosition}
+          closeButton
+        />
+        <ReactQueryDevtools
+          client={queryClient}
+          initialIsOpen={false}
+        />
+      </QueryClientProvider>
+    );
+  },
+  (prev, next) => {
+    return prev.params.serverSlug === next.params.serverSlug;
+  },
+);
 
 export default Layout;

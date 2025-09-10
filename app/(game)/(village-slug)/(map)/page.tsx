@@ -26,10 +26,10 @@ import { isStandaloneDisplayMode } from 'app/utils/device';
 import { Dialog } from 'app/components/ui/dialog';
 import { TileDialog } from 'app/(game)/(village-slug)/(map)/components/tile-modal';
 import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
-import { parseCoordinatesFromTileId } from 'app/utils/map';
 import type { Route } from '.react-router/types/app/(game)/(village-slug)/(map)/+types/page';
 import { useTranslation } from 'react-i18next';
 import type { ITooltip as ReactTooltipProps } from 'react-tooltip';
+import { usePreferences } from 'app/(game)/(village-slug)/hooks/use-preferences';
 
 // Height/width of ruler on the left-bottom.
 const RULER_SIZE = 20;
@@ -49,11 +49,12 @@ const MapPage = () => {
   const { gridSize, tileSize, magnification } = use(MapContext);
   const { currentVillage } = useCurrentVillage();
   const location = useLocation();
+  const { preferences } = usePreferences();
 
-  const { x, y } = parseCoordinatesFromTileId(currentVillage.id);
+  const { x, y } = currentVillage.coordinates;
 
-  const startingX = Number.parseInt(searchParams.get('x') ?? `${x}`);
-  const startingY = Number.parseInt(searchParams.get('y') ?? `${y}`);
+  const startingX = Number.parseInt(searchParams.get('x') ?? `${x}`, 10);
+  const startingY = Number.parseInt(searchParams.get('y') ?? `${y}`, 10);
 
   const mapRef = useRef<HTMLDivElement>(null);
 
@@ -97,11 +98,19 @@ const MapPage = () => {
       gridSize,
       mapFilters,
       magnification,
+      preferences,
       onClick: (tile: TileType) => {
         openModal(tile);
       },
     };
-  }, [contextualMap, mapFilters, gridSize, magnification, openModal]);
+  }, [
+    contextualMap,
+    mapFilters,
+    gridSize,
+    magnification,
+    openModal,
+    preferences,
+  ]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: We need to re-attach handlers on tile-size change, because map remounts
   useEffect(() => {
@@ -184,18 +193,15 @@ const MapPage = () => {
       if (bottomMapRulerRef.current) {
         bottomMapRulerRef.current.scrollTo(scrollLeft);
       }
-
       if (leftMapRulerRef.current) {
         leftMapRulerRef.current.scrollTo(scrollTop);
       }
 
-      // Zoom completely breaks the centering, so we use this to manually keep track of the center tile and manually scroll to it on zoom
-      currentCenterTile.current.x =
-        Math.floor(
-          (scrollLeft + (width - tileSize) / 2) / tileSize - gridSize / 2,
-        ) + 1;
-      currentCenterTile.current.y = Math.ceil(
-        (scrollTop + (mapHeight - tileSize) / 2) / tileSize - gridSize / 2,
+      currentCenterTile.current.x = Math.round(
+        (scrollLeft + width / 2) / tileSize - gridSize / 2,
+      );
+      currentCenterTile.current.y = Math.round(
+        gridSize / 2 - (scrollTop + mapHeight / 2) / tileSize,
       );
     },
     [tileSize, gridSize, width, mapHeight],
@@ -242,7 +248,7 @@ const MapPage = () => {
         return null;
       }
 
-      const tile = getTileByTileId(Number.parseInt(tileId));
+      const tile = getTileByTileId(Number.parseInt(tileId, 10));
       return <TileTooltip tile={tile} />;
     },
     [getTileByTileId],

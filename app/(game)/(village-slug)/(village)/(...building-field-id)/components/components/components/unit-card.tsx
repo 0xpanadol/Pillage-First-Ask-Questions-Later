@@ -1,4 +1,4 @@
-import type React from 'react';
+import type { PropsWithChildren } from 'react';
 import { Fragment } from 'react';
 import { createContext } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -59,7 +59,7 @@ type UnitCardProps = {
   showOuterBorder?: boolean;
 };
 
-export const UnitCard: React.FCWithChildren<UnitCardProps> = (props) => {
+export const UnitCard = (props: PropsWithChildren<UnitCardProps>) => {
   const {
     unitId,
     buildingId,
@@ -279,6 +279,7 @@ export const UnitResearch = () => {
           <Button
             onClick={researchUnit}
             variant="default"
+            size="fit"
             disabled={!canStartResearch}
           >
             {hasResearchEventsOngoing && t('Research is already taking place')}
@@ -384,6 +385,7 @@ export const UnitImprovement = () => {
       <section className="flex flex-col gap-2 pt-2 border-t border-border">
         <Text as="h3">{t('Available actions')}</Text>
         <Button
+          size="fit"
           variant="default"
           disabled={!canUpgrade}
           onClick={upgradeUnit}
@@ -562,7 +564,7 @@ export const UnitRecruitment = () => {
         <div className="flex gap-1 items-center">
           <Icon
             className="size-5"
-            variant="negative-change"
+            subIcon="negativeChange"
             type="unitWheatConsumption"
           />
           {unitWheatConsumption * amount}
@@ -605,6 +607,7 @@ export const UnitRecruitment = () => {
           </div>
         </div>
         <Button
+          size="fit"
           type="submit"
           disabled={maxUnits === 0 || amount === 0}
         >

@@ -10,9 +10,9 @@ import { Tooltip } from 'react-tooltip';
 import type { Troop } from 'app/interfaces/models/game/troop';
 import { Text } from 'app/components/text';
 import { useMediaQuery } from 'app/(game)/(village-slug)/hooks/dom/use-media-query';
-import { useId } from 'react';
+import { Suspense, useId } from 'react';
 
-export const TroopList = () => {
+const TroopListContent = () => {
   const { t } = useTranslation();
   const { t: assetsT } = useTranslation();
   const { shouldShowSidebars } = useGameLayoutState();
@@ -20,13 +20,14 @@ export const TroopList = () => {
   const { playerTroops } = usePlayerTroops();
   const isWiderThanLg = useMediaQuery('(min-width: 1024px)');
   const tooltipId = useId();
+  const tooltipKey = isWiderThanLg ? 'wider-than-lg' : 'not-wider-than-lg';
 
   if (!shouldShowSidebars) {
     return null;
   }
 
   const currentVillagePlayerTroops = playerTroops.filter(
-    ({ tileId }) => tileId === currentVillage.id,
+    ({ tileId }) => tileId === currentVillage.tileId,
   );
 
   const [ownTroops, reinforcements] = partition<Troop>(
@@ -44,6 +45,7 @@ export const TroopList = () => {
       </div>
 
       <Tooltip
+        key={tooltipKey}
         id={tooltipId}
         className="!z-20 !rounded-xs !px-2 !py-1 !bg-background !text-black border border-border"
         classNameArrow="border-r border-b border-border"
@@ -107,5 +109,13 @@ export const TroopList = () => {
         </div>
       </Tooltip>
     </div>
+  );
+};
+
+export const TroopList = () => {
+  return (
+    <Suspense fallback={null}>
+      <TroopListContent />
+    </Suspense>
   );
 };

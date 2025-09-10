@@ -2,20 +2,12 @@ import { Icon } from 'app/components/icon';
 import type {
   IconType,
   ResourceCombinationIconType,
-} from 'app/components/icons/icon-maps';
+} from 'app/components/icons/icons';
 import type {
   OasisResourceBonus,
   OasisTile,
 } from 'app/interfaces/models/game/tile';
 import { capitalize } from 'moderndash';
-import type React from 'react';
-
-type OccupiableOasisIconProps = Omit<
-  React.ComponentProps<typeof Icon>,
-  'type'
-> & {
-  oasisResourceBonus: OasisTile['ORB'];
-};
 
 // Honestly, would be better to just type out every combination and skip the hardcoded assertions
 const getIconType = (oasisResourceBonus: OasisResourceBonus[]): IconType => {
@@ -32,17 +24,17 @@ const getIconType = (oasisResourceBonus: OasisResourceBonus[]): IconType => {
   ) as ResourceCombinationIconType;
 };
 
-export const OccupiableOasisIcon: React.FC<OccupiableOasisIconProps> = (
-  props,
-) => {
-  const { oasisResourceBonus, className, ...rest } = props;
+type OccupiableOasisIconProps = {
+  oasisResourceBonus: OasisTile['ORB'];
+};
+
+export const OccupiableOasisIcon = (props: OccupiableOasisIconProps) => {
+  const { oasisResourceBonus } = props;
 
   const iconType = getIconType(oasisResourceBonus);
 
   return (
     <Icon
-      {...rest}
-      wrapperClassName={className}
       type={iconType}
       shouldShowTooltip={false}
     />

@@ -1,6 +1,5 @@
 import type { Building } from 'app/interfaces/models/game/building';
-import type React from 'react';
-import { use } from 'react';
+import { type JSX, type LazyExoticComponent, use } from 'react';
 import { lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text } from 'app/components/text';
@@ -12,7 +11,6 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from 'app/components/ui/breadcrumb';
-import { useGameNavigation } from 'app/(game)/(village-slug)/hooks/routes/use-game-navigation';
 import { useBuildingVirtualLevel } from 'app/(game)/(village-slug)/(village)/hooks/use-building-virtual-level';
 import { Tab, TabList, TabPanel, Tabs } from 'app/components/ui/tabs';
 import {
@@ -20,7 +18,7 @@ import {
   SectionContent,
 } from 'app/(game)/(village-slug)/components/building-layout';
 import { Skeleton } from 'app/components/ui/skeleton';
-import { BuildingContext } from 'app/(game)/(village-slug)/(village)/(...building-field-id)/providers/building-provider';
+import { BuildingFieldContext } from 'app/(game)/(village-slug)/(village)/(...building-field-id)/providers/building-field-provider';
 import { Bookmark } from 'app/(game)/(village-slug)/(village)/(...building-field-id)/components/components/bookmark';
 import {
   BuildingBenefits,
@@ -85,6 +83,15 @@ const TreasuryArtifacts = lazy(async () => ({
   default: (await import('./components/treasury-artifacts')).TreasuryArtifacts,
 }));
 
+const EmbassyRelations = lazy(async () => ({
+  default: (await import('./components/embassy-relations')).EmbassyRelations,
+}));
+
+const TownHallCelebrations = lazy(async () => ({
+  default: (await import('./components/town-hall-celebrations'))
+    .TownHallCelebrations,
+}));
+
 const MarketplaceBuy = lazy(async () => ({
   default: (await import('./components/marketplace-trade')).MarketplaceTrade,
 }));
@@ -143,10 +150,7 @@ const HospitalTroopTraining = lazy(async () => ({
     .HospitalTroopTraining,
 }));
 
-const palaceTabs = new Map<
-  string,
-  React.LazyExoticComponent<() => React.JSX.Element>
->([
+const palaceTabs = new Map<string, LazyExoticComponent<() => JSX.Element>>([
   ['train-settlers', PalaceTrainSettler],
   ['loyalty', PalaceLoyalty],
   ['expansion', PalaceExpansion],
@@ -154,7 +158,7 @@ const palaceTabs = new Map<
 
 const buildingDetailsTabMap = new Map<
   Building['id'],
-  Map<string, React.LazyExoticComponent<() => React.JSX.Element>>
+  Map<string, LazyExoticComponent<() => JSX.Element>>
 >([
   [
     'MAIN_BUILDING',
@@ -169,6 +173,8 @@ const buildingDetailsTabMap = new Map<
     ]),
   ],
   ['TREASURY', new Map([['artifacts', TreasuryArtifacts]])],
+  ['EMBASSY', new Map([['artifacts', EmbassyRelations]])],
+  ['TOWN_HALL', new Map([['artifacts', TownHallCelebrations]])],
   [
     'MARKETPLACE',
     new Map([
@@ -204,17 +210,19 @@ const buildingDetailsTabMap = new Map<
 // t('unit-improvement')
 // t('oasis')
 // t('celebration')
+// t('celebrations')
+// t('relations')
 // t('train')
 
 export const BuildingDetails = () => {
   const { t } = useTranslation();
   const { t: assetsT } = useTranslation();
   const { t: dynamicT } = useTranslation();
-  const { buildingId, id: buildingFieldId } = use(BuildingContext);
-  const { villagePath, resourcesPath } = useGameNavigation();
-  const { actualLevel } = useBuildingVirtualLevel(buildingId, buildingFieldId!);
+  const { buildingField, buildingFieldId } = use(BuildingFieldContext);
 
-  const parentLink = buildingFieldId! > 18 ? villagePath : resourcesPath;
+  const buildingId = buildingField!.buildingId;
+
+  const { actualLevel } = useBuildingVirtualLevel(buildingId, buildingFieldId!);
 
   const tabs = Array.from([
     'default',
@@ -235,7 +243,7 @@ export const BuildingDetails = () => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink to={parentLink}>
+            <BreadcrumbLink to="..">
               {buildingFieldId! > 18 ? t('Village') : t('Resources')}
             </BreadcrumbLink>
           </BreadcrumbItem>

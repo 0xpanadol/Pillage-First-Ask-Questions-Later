@@ -8,11 +8,14 @@ import type {
 import type { Reputation } from 'app/interfaces/models/game/reputation';
 import type { Tribe } from 'app/interfaces/models/game/tribe';
 import type { WorldItem } from 'app/interfaces/models/game/world-item';
-import type { TroopMovementType } from 'app/components/icons/icon-maps';
+import type { TroopMovementType } from 'app/components/icons/icons';
 
 export type BaseTile = {
-  // id is bit-packed to save space, see `parseCoordinatesFromTileId`
   id: number;
+  coordinates: {
+    x: number;
+    y: number;
+  };
 };
 
 export type OasisResourceBonus = {
@@ -61,12 +64,11 @@ type ContextualBaseTile = BaseTile & {
   troopMovementIcon: TroopMovementType | null;
 };
 
-export type ContextualOasisTile = ContextualBaseTile & OasisTile;
+type ContextualOasisTile = ContextualBaseTile & OasisTile;
 
-export type ContextualOccupiedOasisTile = ContextualBaseTile &
-  OccupiedOasisTile;
+type ContextualOccupiedOasisTile = ContextualBaseTile & OccupiedOasisTile;
 
-export type ContextualOccupiableTile = ContextualBaseTile & OccupiableTile;
+type ContextualOccupiableTile = ContextualBaseTile & OccupiableTile;
 
 export type ContextualOccupiedOccupiableTile = ContextualBaseTile &
   OccupiedOccupiableTile & {

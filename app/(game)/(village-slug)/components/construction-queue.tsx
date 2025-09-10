@@ -1,5 +1,5 @@
 import { useGameLayoutState } from 'app/(game)/(village-slug)/hooks/use-game-layout-state';
-import type React from 'react';
+import { type PropsWithChildren, Suspense } from 'react';
 import { use } from 'react';
 import { FaLock } from 'react-icons/fa6';
 import { ImHammer } from 'react-icons/im';
@@ -30,9 +30,10 @@ type ConstructionQueueBuildingProps = {
   tooltipPosition: PlacesType;
 };
 
-const ConstructionQueueBuilding: React.FCWithChildren<
-  ConstructionQueueBuildingProps
-> = ({ buildingEvent, tooltipPosition }) => {
+const ConstructionQueueBuilding = ({
+  buildingEvent,
+  tooltipPosition,
+}: PropsWithChildren<ConstructionQueueBuildingProps>) => {
   const { t: assetsT } = useTranslation();
   const { t } = useTranslation();
   const isWiderThanMd = useMediaQuery('(min-width: 768px)');
@@ -58,6 +59,9 @@ const ConstructionQueueBuilding: React.FCWithChildren<
   });
 
   const tooltipId = `tooltip-${buildingEvent.id}`;
+  const tooltipKey = isWiderThanMd
+    ? 'is-wider-than-md'
+    : 'is-not-wider-than-md';
 
   const isScheduledEvent = isScheduledBuildingEvent(buildingEvent);
 
@@ -75,6 +79,7 @@ const ConstructionQueueBuilding: React.FCWithChildren<
       </div>
 
       <Tooltip
+        key={tooltipKey}
         id={tooltipId}
         clickable
         className="!z-20 !rounded-xs !px-2 !py-1 !bg-background !w-fit !text-black border border-border"
@@ -133,9 +138,9 @@ type ConstructionQueueEmptySlotProps = {
   type: 'free' | 'locked';
 };
 
-const ConstructionQueueEmptySlot: React.FCWithChildren<
-  ConstructionQueueEmptySlotProps
-> = ({ type }) => {
+const ConstructionQueueEmptySlot = ({
+  type,
+}: PropsWithChildren<ConstructionQueueEmptySlotProps>) => {
   if (type === 'free') {
     return <ImHammer className={iconClassName} />;
   }
@@ -143,7 +148,7 @@ const ConstructionQueueEmptySlot: React.FCWithChildren<
   return <FaLock className={iconClassName} />;
 };
 
-export const ConstructionQueue = () => {
+export const ConstructionQueueContent = () => {
   const tribe = useTribe();
   const { shouldShowSidebars } = useGameLayoutState();
   const { currentVillageBuildingEvents } = use(
@@ -185,5 +190,13 @@ export const ConstructionQueue = () => {
         </li>
       ))}
     </ul>
+  );
+};
+
+export const ConstructionQueue = () => {
+  return (
+    <Suspense fallback={null}>
+      <ConstructionQueueContent />
+    </Suspense>
   );
 };

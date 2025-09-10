@@ -50,7 +50,7 @@ export const DemolishBuilding = () => {
   const onValueChange = (value: string) => {
     const buildingField = getBuildingFieldByBuildingFieldId(
       currentVillage,
-      Number.parseInt(value) as BuildingField['id'],
+      Number.parseInt(value, 10) as BuildingField['id'],
     )!;
     setBuildingFieldToDemolish(buildingField);
   };
@@ -107,6 +107,7 @@ export const DemolishBuilding = () => {
       <div className="flex gap-2">
         {buildingFieldToDemolish.level > 1 && (
           <Button
+            size="fit"
             disabled={
               !canDemolishBuildings || buildingDowngradeErrorBag.length > 0
             }
@@ -118,6 +119,7 @@ export const DemolishBuilding = () => {
           </Button>
         )}
         <Button
+          size="fit"
           disabled={
             !canDemolishBuildings || buildingDowngradeErrorBag.length > 0
           }

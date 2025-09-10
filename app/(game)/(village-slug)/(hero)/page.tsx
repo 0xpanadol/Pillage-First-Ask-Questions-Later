@@ -9,7 +9,6 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from 'app/components/ui/breadcrumb';
-import { useGameNavigation } from 'app/(game)/(village-slug)/hooks/routes/use-game-navigation';
 import { Text } from 'app/components/text';
 import { useHero } from 'app/(game)/(village-slug)/hooks/use-hero';
 import { calculateHeroLevel } from 'app/(game)/(village-slug)/hooks/utils/hero';
@@ -17,14 +16,12 @@ import { useServer } from 'app/(game)/(village-slug)/hooks/use-server';
 import { Auctions } from 'app/(game)/(village-slug)/(hero)/components/auctions';
 import { HeroAttributes } from 'app/(game)/(village-slug)/(hero)/components/hero-attributes';
 import { HeroInventory } from 'app/(game)/(village-slug)/(hero)/components/hero-inventory';
-import type React from 'react';
 import type { Route } from '.react-router/types/app/(game)/(village-slug)/(hero)/+types/page';
 
-const HeroPage: React.FC<Route.ComponentProps> = ({ params }) => {
+const HeroPage = ({ params }: Route.ComponentProps) => {
   const { serverSlug, villageSlug } = params;
 
   const { t } = useTranslation();
-  const { resourcesPath } = useGameNavigation();
   const { experience } = useHero();
   const { server } = useServer();
   const { level } = calculateHeroLevel(experience);
@@ -42,7 +39,7 @@ const HeroPage: React.FC<Route.ComponentProps> = ({ params }) => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink to={resourcesPath}>{t('Resources')}</BreadcrumbLink>
+            <BreadcrumbLink to="../resources">{t('Resources')}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>{t('Hero')}</BreadcrumbItem>
@@ -50,6 +47,11 @@ const HeroPage: React.FC<Route.ComponentProps> = ({ params }) => {
       </Breadcrumb>
       <Text as="h1">
         {name} - {t('level {{level}}', { level })}
+      </Text>
+      <Text>
+        {t(
+          'The Hero is your strongest unit. It can be improved and equipped with powerful items. The Hero does not need to be researched or trained and is available from the start. The hero can attack or defend like other units, but is the only one who can go on adventures for loot and conquer oases for bonus resources.',
+        )}
       </Text>
       <Tabs
         selectedIndex={tabIndex}

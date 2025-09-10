@@ -500,6 +500,14 @@
       "NAME": "Clay pit",
       "DESCRIPTION": "Clay is produced here. By increasing its level you increase the production of clay. Clay pit can be extended to level 20. Clay production can additionally be increased by occupying clay oasis."
     },
+    "EMBASSY": {
+      "NAME": "Embassy",
+      "DESCRIPTION": "The Embassy is the place for diplomatic relations. Here you can view the information about other factions, how they view you and work on improving your standing."
+    },
+    "TOWN_HALL": {
+      "NAME": "Town hall",
+      "DESCRIPTION": "The Town Hall is the cultural centre for your village. In it you can organise celebrations which will increase the number of your culture points, depending on the size of the celebration."
+    },
     "WHEAT_FIELD": {
       "NAME": "Wheat field",
       "DESCRIPTION": "Wheat is produced here. By increasing its level you increase the production of wheat. Wheat field can be extended to level 20. Wheat production can additionally be increased by occupying wheat oasis."
@@ -766,7 +774,7 @@
     },
     "ONE-OF": {
       "TITLE": "{{buildingName}} to level {{level}}",
-      "DESCRIPTION": "Upgrade the {{buildingName}} to level {{level}}",
+      "DESCRIPTION": "Upgrade the {{buildingName}} to level {{level}}.",
       "GROUP": "{{buildingName}}"
     },
     "EVERY": {
@@ -809,7 +817,7 @@
     "IRON": "Iron",
     "WHEAT": "Wheat"
   },
-  "EFFECTS": {
+  "ICONS": {
     "missingIcon": "Missing icon",
     "wood": "Wood",
     "clay": "Clay",
@@ -870,10 +878,6 @@
     "wheatProduction": "Wheat production",
     "crannyCapacity": "Cranny capacity",
     "revealedIncomingTroopsAmount": "Revealed incoming troops",
-    "woodProductionOasisBonus": "Wood production oasis bonus",
-    "clayProductionOasisBonus": "Clay production oasis bonus",
-    "ironProductionOasisBonus": "Iron production oasis bonus",
-    "wheatProductionOasisBonus": "Wheat production oasis bonus",
     "merchantAmount": "Merchant amount",
     "unitSpeedAfter20Fields": "Unit speed after 20 fields",
     "hero": "Hero",
@@ -952,6 +956,9 @@
     "offensiveMovementOutgoing": "Offensive movement (outgoing)",
     "offensiveMovementIncoming": "Offensive movement (incoming)",
     "adventure": "Adventure",
+    "positiveChange": "Increase",
+    "negativeChange": "Decrease",
+    "merchantSpeed": "Merchant speed",
     "findNewVillage": "Find new village",
     "cancel": "Cancel"
   }

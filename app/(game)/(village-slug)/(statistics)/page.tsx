@@ -2,7 +2,6 @@ import { useTabParam } from 'app/(game)/(village-slug)/hooks/routes/use-tab-para
 import { Tab, TabList, TabPanel, Tabs } from 'app/components/ui/tabs';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'app/components/ui/alert';
-import { useGameNavigation } from 'app/(game)/(village-slug)/hooks/routes/use-game-navigation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,14 +10,12 @@ import {
   BreadcrumbSeparator,
 } from 'app/components/ui/breadcrumb';
 import { Text } from 'app/components/text';
-import type React from 'react';
 import type { Route } from '.react-router/types/app/(game)/(village-slug)/(statistics)/+types/page';
 
-const StatisticsPage: React.FC<Route.ComponentProps> = ({ params }) => {
+const StatisticsPage = ({ params }: Route.ComponentProps) => {
   const { serverSlug, villageSlug } = params;
 
   const { t } = useTranslation();
-  const { resourcesPath } = useGameNavigation();
 
   const tabs = ['default', 'villages', 'week-by-week'];
 
@@ -32,7 +29,7 @@ const StatisticsPage: React.FC<Route.ComponentProps> = ({ params }) => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink to={resourcesPath}>{t('Resources')}</BreadcrumbLink>
+            <BreadcrumbLink to="../resources">{t('Resources')}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>{t('Statistics')}</BreadcrumbItem>

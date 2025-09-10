@@ -2,13 +2,13 @@ import { useGameLayoutState } from 'app/(game)/(village-slug)/hooks/use-game-lay
 import type { GameEvent } from 'app/interfaces/models/game/game-event';
 import type { Village } from 'app/interfaces/models/game/village';
 import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
-import type React from 'react';
-import type { IconType } from 'app/components/icons/icon-maps';
+import type { IconType } from 'app/components/icons/icons';
 import { Icon } from 'app/components/icon';
 import { Countdown } from 'app/(game)/(village-slug)/components/countdown';
 import { Separator } from 'app/components/ui/separator';
 import clsx from 'clsx';
 import { useEventsByType } from 'app/(game)/(village-slug)/hooks/use-events-by-type';
+import { Suspense } from 'react';
 
 type TroopMovementProps = {
   type: Extract<
@@ -23,7 +23,7 @@ type TroopMovementProps = {
   events: GameEvent<'troopMovement'>[];
 };
 
-const TroopMovement: React.FC<TroopMovementProps> = ({ type, events }) => {
+const TroopMovement = ({ type, events }: TroopMovementProps) => {
   if (events.length === 0) {
     return null;
   }
@@ -110,7 +110,7 @@ const partitionTroopMovementEvents = (
   };
 };
 
-export const TroopMovements = () => {
+const TroopMovementsContent = () => {
   const { currentVillage } = useCurrentVillage();
   const { shouldShowSidebars } = useGameLayoutState();
   const { eventsByType: troopMovementEvents } =
@@ -156,5 +156,13 @@ export const TroopMovements = () => {
         events={incomingOffensiveMovementEvents}
       />
     </div>
+  );
+};
+
+export const TroopMovements = () => {
+  return (
+    <Suspense fallback={null}>
+      <TroopMovementsContent />
+    </Suspense>
   );
 };

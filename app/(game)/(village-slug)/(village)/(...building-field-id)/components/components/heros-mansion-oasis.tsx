@@ -3,7 +3,6 @@ import {
   Section,
   SectionContent,
 } from 'app/(game)/(village-slug)/components/building-layout';
-import { useGameNavigation } from 'app/(game)/(village-slug)/hooks/routes/use-game-navigation';
 import { useOasis } from 'app/(game)/(village-slug)/hooks/use-oasis';
 import { Icon } from 'app/components/icon';
 import { Text } from 'app/components/text';
@@ -17,15 +16,12 @@ import {
 } from 'app/components/ui/table';
 import { Tab, TabList, TabPanel, Tabs } from 'app/components/ui/tabs';
 import type { OasisTile } from 'app/interfaces/models/game/tile';
-import { parseCoordinatesFromTileId } from 'app/utils/map';
 import clsx from 'clsx';
-import type React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useCurrentVillage } from 'app/(game)/(village-slug)/hooks/current-village/use-current-village';
 import { Button } from 'app/components/ui/button';
 import type { OccupiableOasisInRangeDTO } from 'app/interfaces/dtos';
-import { getPlayerName } from 'app/(game)/(village-slug)/utils/player';
 import { usePlayerTroops } from 'app/(game)/(village-slug)/hooks/use-player-troops';
 
 type OccupiedOasisRowProps = {
@@ -34,30 +30,28 @@ type OccupiedOasisRowProps = {
   heroMansionLevelRequirement: number;
 };
 
-const OccupiedOasisRow: React.FC<OccupiedOasisRowProps> = ({
+const OccupiedOasisRow = ({
   occupiedOasis,
   heroMansionLevel,
   heroMansionLevelRequirement,
-}) => {
+}: OccupiedOasisRowProps) => {
   const { t } = useTranslation();
-  const { mapPath } = useGameNavigation();
   const { abandonOasis } = useOasis();
 
   const hasOccupiedOasis = !!occupiedOasis;
 
   if (hasOccupiedOasis) {
-    const { x, y } = parseCoordinatesFromTileId(occupiedOasis.id);
-
     return (
       <TableRow>
         <TableCell>
           <Text>
-            <Link
-              className="underline"
-              to={`${mapPath}?x=${x}&y=${y}`}
-            >
-              {x}, {y}
-            </Link>
+            {/*// TODO: Re-enable this when SQLite migration is finished */}
+            {/*<Link*/}
+            {/*  className="underline"*/}
+            {/*  to={`${mapPath}?x=${x}&y=${y}`}*/}
+            {/*>*/}
+            {/*  {x}, {y}*/}
+            {/*</Link>*/}/
           </Text>
         </TableCell>
         <TableCell className="whitespace-nowrap">
@@ -78,7 +72,10 @@ const OccupiedOasisRow: React.FC<OccupiedOasisRowProps> = ({
           ))}
         </TableCell>
         <TableCell>
-          <Button onClick={() => abandonOasis({ oasisId: occupiedOasis.id })}>
+          <Button
+            size="fit"
+            onClick={() => abandonOasis({ oasisId: occupiedOasis.id })}
+          >
             {t('Abandon oasis')}
           </Button>
         </TableCell>
@@ -112,10 +109,10 @@ type OccupiableOasisRowActionsProps = {
   freeSlots: number;
 };
 
-const OccupiableOasisRowActions: React.FC<OccupiableOasisRowActionsProps> = ({
+const OccupiableOasisRowActions = ({
   occupiableOasisDTO,
   freeSlots,
-}) => {
+}: OccupiableOasisRowActionsProps) => {
   const { oasis, player } = occupiableOasisDTO;
 
   const { t } = useTranslation();
@@ -126,11 +123,11 @@ const OccupiableOasisRowActions: React.FC<OccupiableOasisRowActionsProps> = ({
   const isHeroAvailable = !!playerTroops.find(
     ({ unitId, tileId, source }) =>
       unitId === 'HERO' &&
-      tileId === currentVillage.id &&
-      source === currentVillage.id,
+      tileId === currentVillage.tileId &&
+      source === currentVillage.tileId,
   );
 
-  const isOccupiedByPlayer = player !== null && player.id === 'player';
+  const isOccupiedByPlayer = player !== null && player.id === 0;
 
   if (isOccupiedByPlayer) {
     return <Text>{t('You already occupy this oasis')}</Text>;
@@ -145,7 +142,10 @@ const OccupiableOasisRowActions: React.FC<OccupiableOasisRowActionsProps> = ({
   }
 
   return (
-    <Button onClick={() => occupyOasis({ oasisId: oasis.id })}>
+    <Button
+      size="fit"
+      onClick={() => occupyOasis({ oasisId: oasis.id })}
+    >
       {t('Occupy')}
     </Button>
   );
@@ -156,29 +156,26 @@ type OccupiableOasisRowProps = {
   freeSlots: number;
 };
 
-const OccupiableOasisRow: React.FC<OccupiableOasisRowProps> = ({
+const OccupiableOasisRow = ({
   occupiableOasisDTO,
   freeSlots,
-}) => {
+}: OccupiableOasisRowProps) => {
   const { oasis, village, player } = occupiableOasisDTO;
 
-  const { mapPath } = useGameNavigation();
-
-  const oasisCoordinates = parseCoordinatesFromTileId(oasis.id);
-  const villageCoordinates =
-    village === null ? null : parseCoordinatesFromTileId(village.id);
+  const oasisCoordinates = oasis.coordinates;
+  const villageCoordinates = village === null ? null : village.coordinates;
 
   return (
     <TableRow key={oasis.id}>
       <TableCell>
-        <Text>{player !== null ? getPlayerName(player.name) : '/'}</Text>
+        <Text>{player !== null ? player.name : '/'}</Text>
       </TableCell>
       <TableCell>
         <Text>
           {village !== null && (
             <Link
               className="underline"
-              to={`${mapPath}?x=${villageCoordinates!.x}&y=${villageCoordinates!.y}`}
+              to={`../map?x=${villageCoordinates!.x}&y=${villageCoordinates!.y}`}
             >
               {village.name} ({villageCoordinates!.x}, {villageCoordinates!.y})
             </Link>
@@ -190,7 +187,7 @@ const OccupiableOasisRow: React.FC<OccupiableOasisRowProps> = ({
         <Text>
           <Link
             className="underline"
-            to={`${mapPath}?x=${oasisCoordinates.x}&y=${oasisCoordinates.y}`}
+            to={`../map?x=${oasisCoordinates.x}&y=${oasisCoordinates.y}`}
           >
             {oasisCoordinates.x}, {oasisCoordinates.y}
           </Link>

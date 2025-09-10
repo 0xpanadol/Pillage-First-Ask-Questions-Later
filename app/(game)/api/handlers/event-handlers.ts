@@ -25,13 +25,13 @@ import { addVillageResourcesAt } from 'app/(game)/api/utils/village';
 import type { Player } from 'app/interfaces/models/game/player';
 import { filterEventsByType } from 'app/(game)/api/handlers/utils/events';
 import { createClientEvents } from 'app/(game)/api/handlers/utils/create-event';
+import { PLAYER_ID } from 'app/constants/player';
 
 export const getVillageEvents: ApiHandler<GameEvent[], 'villageId'> = async (
   queryClient,
   { params },
 ) => {
-  const { villageId: villageIdParam } = params;
-  const villageId = Number.parseInt(villageIdParam);
+  const { villageId } = params;
 
   const events = queryClient.getQueryData<GameEvent[]>([eventsCacheKey])!;
 
@@ -48,8 +48,7 @@ export const getVillageEventsByType: ApiHandler<
   GameEvent[],
   'villageId' | 'eventType'
 > = async (queryClient, { params }) => {
-  const { villageId: villageIdParam, eventType } = params;
-  const villageId = Number.parseInt(villageIdParam);
+  const { villageId, eventType } = params;
 
   const events = queryClient.getQueryData<GameEvent[]>([eventsCacheKey])!;
 
@@ -80,7 +79,7 @@ export const cancelConstructionEvent: ApiHandler<
   } = args;
 
   const players = queryClient.getQueryData<Player[]>([playersCacheKey])!;
-  const { tribe } = players.find(({ id }) => id === 'player')!;
+  const { tribe } = players.find(({ id }) => id === PLAYER_ID)!;
 
   queryClient.setQueryData<GameEvent[]>([eventsCacheKey], (prevEvents) => {
     const cancelledEvent = prevEvents!.find(

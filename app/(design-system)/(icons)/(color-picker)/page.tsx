@@ -1,7 +1,6 @@
 import { Button } from 'app/components/ui/button';
 import { Icon } from 'app/components/icon';
-import type React from 'react';
-import { useState } from 'react';
+import { type JSX, type SetStateAction, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import styles from './horse.module.scss';
 
@@ -23,7 +22,7 @@ const HorseColorPicker = () => {
 
   // Handle changes in the dropdown
   const handleIdChange = (event: {
-    target: { value: React.SetStateAction<string> };
+    target: { value: SetStateAction<string> };
   }) => {
     setSelectedId(event.target.value);
   };
@@ -50,7 +49,7 @@ const HorseColorPicker = () => {
           type="paladin"
           className={styles.horse}
           style={{
-            // @ts-ignore
+            // @ts-expect-error
             '--base-color': colors.base,
             '--eye-color': colors.eye_1_,
             '--neck-front-color': colors['neck-front_1_'],
@@ -85,7 +84,12 @@ const HorseColorPicker = () => {
             onChange={handleColorChange}
           />
         </label>
-        <Button onClick={copyColors}>Copy color selection</Button>
+        <Button
+          size="fit"
+          onClick={copyColors}
+        >
+          Copy color selection
+        </Button>
       </div>
     </div>
   );
@@ -93,7 +97,7 @@ const HorseColorPicker = () => {
 
 type Param = 'pathfinder';
 
-type ParamToComponentMap = Record<Param, () => React.JSX.Element>;
+type ParamToComponentMap = Record<Param, () => JSX.Element>;
 
 const paramToComponentMap: ParamToComponentMap = {
   pathfinder: HorseColorPicker,

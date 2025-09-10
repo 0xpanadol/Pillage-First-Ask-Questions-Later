@@ -43,11 +43,14 @@ export type BuildingId =
   | 'TOURNAMENT_SQUARE'
   | 'TRADE_OFFICE'
   | 'SMITHY'
+  | 'TOWN_HALL'
+  | 'EMBASSY'
   | 'TREASURY';
 
 export type BuildingEffect = {
   effectId: Effect['id'];
   valuesPerLevel: number[];
+  type: Effect['type'];
 };
 
 export type BuildingLevelBuildingRequirement = {

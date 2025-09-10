@@ -19,6 +19,7 @@ export const getPlayerById: ApiHandler<Player, 'playerId'> = async (
   const {
     params: { playerId },
   } = args;
+
   const players = queryClient.getQueryData<Player[]>([playersCacheKey])!;
 
   return players.find(({ id }) => id === playerId)!;
@@ -39,16 +40,15 @@ export const getVillagesByPlayer: ApiHandler<Village[], 'playerId'> = async (
 
 export const getTroopsByVillage: ApiHandler<
   Troop[],
-  'playerId' | 'villageId'
+  'playerId' | 'tileId'
 > = async (queryClient, args) => {
   const {
-    params: { villageId: villageIdParam },
+    params: { tileId },
   } = args;
 
-  const villageId = Number.parseInt(villageIdParam);
-
   const troops = queryClient.getQueryData<Troop[]>([troopsCacheKey]) ?? [];
-  return troops.filter(({ tileId }) => tileId === villageId);
+
+  return troops.filter(({ tileId: troopTileId }) => troopTileId === tileId);
 };
 
 type RenameVillageBody = {
@@ -61,11 +61,9 @@ export const renameVillage: ApiHandler<
   RenameVillageBody
 > = async (queryClient, args) => {
   const {
-    params: { villageId: villageIdParam },
+    params: { villageId },
     body: { name },
   } = args;
-
-  const villageId = Number.parseInt(villageIdParam);
 
   const villages = queryClient.getQueryData<Village[]>([villagesCacheKey])!;
 

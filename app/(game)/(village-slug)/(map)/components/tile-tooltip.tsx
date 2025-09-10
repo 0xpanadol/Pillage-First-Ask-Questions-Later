@@ -15,29 +15,35 @@ import type {
   OccupiedOccupiableTile,
   Tile,
 } from 'app/interfaces/models/game/tile';
-import type React from 'react';
 import { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { WorldItem } from 'app/interfaces/models/game/world-item';
-import { formatNumber } from 'app/utils/common';
-import { parseCoordinatesFromTileId, parseRFCFromTile } from 'app/utils/map';
+import {
+  calculateDistanceBetweenPoints,
+  formatNumber,
+  roundToNDecimalPoints,
+} from 'app/utils/common';
+import { parseRFCFromTile } from 'app/utils/map';
 import { useTilePlayer } from 'app/(game)/(village-slug)/(map)/components/hooks/use-tile-player';
 import { Resources } from 'app/(game)/(village-slug)/components/resources';
 import { useTileTroops } from 'app/(game)/(village-slug)/(map)/components/hooks/use-tile-troops';
 import { useTileWorldItem } from 'app/(game)/(village-slug)/(map)/components/hooks/use-tile-world-item';
 import { Skeleton } from 'app/components/ui/skeleton';
-import { getPlayerName } from 'app/(game)/(village-slug)/utils/player';
-import { getVillageName } from 'app/(game)/(village-slug)/utils/village';
 
 type TileTooltipProps = {
   tile: Tile;
 };
 
-const TileTooltipLocation: React.FC<TileTooltipProps> = ({ tile }) => {
+const TileTooltipLocation = ({ tile }: TileTooltipProps) => {
   const { t } = useTranslation();
-  const { getDistanceFromCurrentVillage } = useCurrentVillage();
-  const distance = getDistanceFromCurrentVillage(tile.id);
-  const { x, y } = parseCoordinatesFromTileId(tile.id);
+  const { currentVillage } = useCurrentVillage();
+  const distance = roundToNDecimalPoints(
+    calculateDistanceBetweenPoints(
+      currentVillage.coordinates,
+      tile.coordinates,
+    ),
+  );
+  const { x, y } = tile.coordinates;
 
   return (
     <span className="text-xs text-gray-300">
@@ -46,7 +52,7 @@ const TileTooltipLocation: React.FC<TileTooltipProps> = ({ tile }) => {
   );
 };
 
-const TileTooltipPlayerInfo: React.FC<TileTooltipProps> = ({ tile }) => {
+const TileTooltipPlayerInfo = ({ tile }: TileTooltipProps) => {
   const { t } = useTranslation();
   const { t: assetsT } = useTranslation();
   const { player, reputation, population } = useTilePlayer(tile.id);
@@ -57,7 +63,7 @@ const TileTooltipPlayerInfo: React.FC<TileTooltipProps> = ({ tile }) => {
   return (
     <>
       <span>
-        {t('Player')} - {getPlayerName(name)}
+        {t('Player')} - {name}
       </span>
       {faction !== 'player' && (
         <>
@@ -84,11 +90,9 @@ type TileTooltipWorldItemProps = {
   item: WorldItem;
 };
 
-const TileTooltipWorldItem: React.FC<TileTooltipWorldItemProps> = ({
-  item,
-}) => {
+const TileTooltipWorldItem = ({ item }: TileTooltipWorldItemProps) => {
   const { t } = useTranslation();
-  const { t: assetsT } = useTranslation();
+  const assetsT = t;
 
   if (item.type === 'resource') {
     return (
@@ -109,7 +113,7 @@ type TileTooltipAnimalsProps = {
   tile: OasisTile;
 };
 
-const TileTooltipAnimals: React.FC<TileTooltipAnimalsProps> = ({ tile }) => {
+const TileTooltipAnimals = ({ tile }: TileTooltipAnimalsProps) => {
   const { troops } = useTileTroops(tile.id);
 
   return (
@@ -131,10 +135,8 @@ type TileTooltipResourcesProps = {
   tile: OccupiableTile;
 };
 
-const TileTooltipResources: React.FC<TileTooltipResourcesProps> = ({
-  tile,
-}) => {
-  const resources = parseRFCFromTile(tile.RFC, 'number');
+const TileTooltipResources = ({ tile }: TileTooltipResourcesProps) => {
+  const resources = parseRFCFromTile(tile.RFC);
   return (
     <Resources
       iconClassName="size-4"
@@ -147,7 +149,7 @@ type OasisTileTooltipProps = {
   tile: OasisTile;
 };
 
-const OasisTileTooltip: React.FC<OasisTileTooltipProps> = ({ tile }) => {
+const OasisTileTooltip = ({ tile }: OasisTileTooltipProps) => {
   const { t } = useTranslation();
 
   const isOccupiable = isOccupiableOasisTile(tile);
@@ -185,9 +187,7 @@ type OccupiableTileTooltipProps = {
   tile: OccupiableTile;
 };
 
-const OccupiableTileTooltip: React.FC<OccupiableTileTooltipProps> = ({
-  tile,
-}) => {
+const OccupiableTileTooltip = ({ tile }: OccupiableTileTooltipProps) => {
   const { t } = useTranslation();
 
   return (
@@ -203,14 +203,14 @@ type OccupiedOccupiableTileTooltipProps = {
   tile: OccupiedOccupiableTile;
 };
 
-const OccupiedOccupiableTileTooltip: React.FC<
-  OccupiedOccupiableTileTooltipProps
-> = ({ tile }) => {
-  const { getVillageById } = useVillages();
+const OccupiedOccupiableTileTooltip = ({
+  tile,
+}: OccupiedOccupiableTileTooltipProps) => {
+  const { getVillageByCoordinates } = useVillages();
   const { worldItem } = useTileWorldItem(tile.id);
 
-  const village = getVillageById(tile.id)!;
-  const title = getVillageName(village.name);
+  const village = getVillageByCoordinates(tile.coordinates)!;
+  const title = village.name;
 
   return (
     <>
@@ -231,7 +231,7 @@ type TileTooltipSkeletonProps = {
   count: number;
 };
 
-const TileTooltipSkeleton: React.FC<TileTooltipSkeletonProps> = ({ count }) => {
+const TileTooltipSkeleton = ({ count }: TileTooltipSkeletonProps) => {
   return (
     <div className="flex flex-col gap-1">
       <Skeleton
@@ -249,7 +249,7 @@ const TileTooltipSkeleton: React.FC<TileTooltipSkeletonProps> = ({ count }) => {
   );
 };
 
-export const TileTooltip: React.FC<TileTooltipProps> = ({ tile }) => {
+export const TileTooltip = ({ tile }: TileTooltipProps) => {
   if (isOasisTile(tile)) {
     return (
       <div className="flex flex-col gap-1">

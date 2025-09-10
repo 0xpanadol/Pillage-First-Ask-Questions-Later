@@ -20,6 +20,7 @@ import {
   npcVillageNameNouns,
 } from 'app/assets/village';
 import { seededRandomIntFromInterval } from 'app/utils/common';
+import { PLAYER_ID } from 'app/constants/player';
 
 // TODO: Update these
 const villageSizeToResourceAmountMap = new Map<VillageSize, number>([
@@ -67,21 +68,6 @@ const tribeToWallBuildingIdMap = new Map<PlayableTribe, Building['id']>([
   ['egyptians', 'STONE_WALL'],
 ]);
 
-const generateVillageNameId = (prng: PRNGFunction): number => {
-  const adjectiveIndex = seededRandomIntFromInterval(
-    prng,
-    0,
-    npcVillageNameAdjectives.length - 1,
-  );
-  const nounIndex = seededRandomIntFromInterval(
-    prng,
-    0,
-    npcVillageNameNouns.length - 1,
-  );
-
-  return adjectiveIndex * npcVillageNameNouns.length + nounIndex;
-};
-
 const createWallBuildingField = (
   tribe: PlayableTribe,
   villageSize: VillageSize | 'player',
@@ -104,7 +90,7 @@ export const playerVillageFactory = ({
   player,
   slug,
 }: PlayerVillageFactoryProps): PlayerVillage => {
-  const { id, RFC } = tile;
+  const { id: tileId, RFC, coordinates } = tile;
 
   const { tribe } = player;
 
@@ -115,18 +101,18 @@ export const playerVillageFactory = ({
   ];
 
   return {
-    id,
+    id: 0,
+    tileId,
     // TODO: Figure out how to translate this, dumping t() around it makes it undefined
     name: 'New village',
+    coordinates,
     slug,
     buildingFields,
     buildingFieldsPresets: [],
-    playerId: 'player',
-    isCapital: false,
+    playerId: PLAYER_ID,
     lastUpdatedAt: Date.now(),
     RFC,
     artifactId: null,
-    expansionSlots: [],
     resources: {
       wood: 750,
       clay: 750,
@@ -141,6 +127,7 @@ type NpcVillageFactoryProps = {
   server: Server;
   tile: OccupiedOccupiableTile;
   player: Player;
+  id: number;
 };
 
 const npcVillageFactory = ({
@@ -148,28 +135,47 @@ const npcVillageFactory = ({
   tile,
   player,
   server,
+  id,
 }: NpcVillageFactoryProps): Village => {
-  const { RFC, id } = tile;
+  const { id: tileId, RFC, coordinates } = tile;
 
   const { id: playerId, tribe } = player;
 
-  const villageSize = getVillageSize(server.configuration.mapSize, tile.id);
+  const villageSize = getVillageSize(
+    server.configuration.mapSize,
+    tile.coordinates,
+  );
 
   const buildingFields = [createWallBuildingField(tribe, villageSize)];
 
   const villageBuildingFieldPresetId: VillagePresetId = `village-${villageSize}`;
   const resourcesBuildingFieldPresetId: VillagePresetId = `resources-${villageSize}`;
 
+  const adjectiveIndex = seededRandomIntFromInterval(
+    prng,
+    0,
+    npcVillageNameAdjectives.length - 1,
+  );
+  const nounIndex = seededRandomIntFromInterval(
+    prng,
+    0,
+    npcVillageNameNouns.length - 1,
+  );
+
+  const adjective = npcVillageNameAdjectives[adjectiveIndex];
+  const noun = npcVillageNameNouns[nounIndex];
+
   return {
     id,
-    name: generateVillageNameId(prng),
+    tileId,
+    coordinates,
+    name: `${adjective}${noun}`,
     buildingFields,
     buildingFieldsPresets: [
       resourcesBuildingFieldPresetId,
       villageBuildingFieldPresetId,
     ],
     playerId,
-    isCapital: false,
     lastUpdatedAt: Date.now(),
     resources: createVillageResources(villageSize),
     RFC,
@@ -192,10 +198,10 @@ export const generateVillages = ({
   const playerMap = new Map(npcPlayers.map((p) => [p.id, p]));
 
   const villages: Village[] = occupiedOccupiableTiles
-    .filter(({ ownedBy }) => ownedBy !== 'player')
-    .map((tile) => {
+    .filter(({ ownedBy }) => ownedBy !== PLAYER_ID)
+    .map((tile, index) => {
       const player = playerMap.get(tile.ownedBy)!;
-      return npcVillageFactory({ prng, player, tile, server });
+      return npcVillageFactory({ prng, player, tile, server, id: index + 2 });
     });
 
   return villages;

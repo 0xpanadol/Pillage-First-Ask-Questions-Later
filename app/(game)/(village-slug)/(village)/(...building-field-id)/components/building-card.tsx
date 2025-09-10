@@ -11,21 +11,21 @@ import {
 } from 'app/(game)/(village-slug)/utils/building';
 import type { Building } from 'app/interfaces/models/game/building';
 import clsx from 'clsx';
-import type React from 'react';
+import type { PropsWithChildren } from 'react';
 import { createContext, use } from 'react';
 import { Fragment } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Text } from 'app/components/text';
-import { useRouteSegments } from 'app/(game)/(village-slug)/hooks/routes/use-route-segments';
 import { useBuildingVirtualLevel } from 'app/(game)/(village-slug)/(village)/hooks/use-building-virtual-level';
 import { useComputedEffect } from 'app/(game)/(village-slug)/hooks/use-computed-effect';
 import { formatTime } from 'app/utils/time';
 import { Resources } from 'app/(game)/(village-slug)/components/resources';
 import { Icon } from 'app/components/icon';
-import { formatValue } from 'app/utils/common';
+import { formatNumber, formatPercentage } from 'app/utils/common';
 import type { BuildingField } from 'app/interfaces/models/game/village';
 import { useEffectServerValue } from 'app/(game)/(village-slug)/hooks/use-effect-server-value';
 import { VillageBuildingLink } from 'app/(game)/(village-slug)/components/village-building-link';
+import { BuildingFieldContext } from 'app/(game)/(village-slug)/(village)/(...building-field-id)/providers/building-field-provider';
 
 type BuildingCardContextState = {
   buildingId: Building['id'];
@@ -46,11 +46,11 @@ type BuildingCardProps = {
   >;
 };
 
-export const BuildingCard: React.FCWithChildren<BuildingCardProps> = ({
+export const BuildingCard = ({
   buildingId,
   buildingConstructionReadinessAssessment,
   children,
-}) => {
+}: PropsWithChildren<BuildingCardProps>) => {
   const building = getBuildingData(buildingId);
 
   return (
@@ -68,7 +68,7 @@ export const BuildingOverview = () => {
   const { t: assetsT } = useTranslation();
   const { t } = useTranslation();
   const { buildingId } = use(BuildingCardContext);
-  const { buildingFieldId } = useRouteSegments();
+  const { buildingFieldId } = use(BuildingFieldContext);
   const { actualLevel, virtualLevel } = useBuildingVirtualLevel(
     buildingId,
     buildingFieldId!,
@@ -122,7 +122,7 @@ export const BuildingOverview = () => {
 
 export const BuildingCost = () => {
   const { t } = useTranslation();
-  const { buildingFieldId } = useRouteSegments();
+  const { buildingFieldId } = use(BuildingFieldContext);
   const { buildingId } = use(BuildingCardContext);
   const { virtualLevel, doesBuildingExist } = useBuildingVirtualLevel(
     buildingId,
@@ -177,14 +177,13 @@ type BuildingBenefitProps = {
   buildingFieldId: BuildingField['id'];
 };
 
-const BuildingBenefit: React.FC<BuildingBenefitProps> = ({
-  effect,
-  isMaxLevel,
-}) => {
+const BuildingBenefit = ({ effect, isMaxLevel }: BuildingBenefitProps) => {
   // TODO: Resource production, warehouse & granary values need to be increased by server effect value
   const { hasEffect, serverEffectValue } = useEffectServerValue(
     effect.effectId,
   );
+
+  const formattingFn = effect.type === 'base' ? formatNumber : formatPercentage;
 
   const type =
     effect.effectId === 'wheatProduction' && effect.currentLevelValue <= 0
@@ -192,10 +191,7 @@ const BuildingBenefit: React.FC<BuildingBenefitProps> = ({
       : effect.effectId;
 
   const effectModifier =
-    type !== 'population' &&
-    Number.isInteger(effect.currentLevelValue) &&
-    Number.isInteger(effect.nextLevelValue) &&
-    hasEffect
+    type !== 'population' && effect.type === 'base' && hasEffect
       ? serverEffectValue
       : 1;
 
@@ -207,32 +203,29 @@ const BuildingBenefit: React.FC<BuildingBenefitProps> = ({
       <Icon
         type={type}
         className="size-6"
-        variant={
+        subIcon={
           effect.areEffectValuesRising || type === 'population'
-            ? 'positive-change'
-            : 'negative-change'
+            ? 'positiveChange'
+            : 'negativeChange'
         }
       />
       <span>
         {!isMaxLevel && effect.currentLevelValue !== effect.nextLevelValue && (
           <>
-            {formatValue(
-              Math.abs(
-                !Number.isInteger(effect.currentLevelValue) &&
-                  effect.currentLevelValue - effect.nextLevelValue < 0
-                  ? (effect.currentLevelValue - 1) * effectModifier
-                  : effect.currentLevelValue * effectModifier,
-              ),
+            {formattingFn(
+              Math.abs(effect.currentLevelValue),
+              effect.areEffectValuesRising,
             )}
             <span className="mx-0.5">&rarr;</span>
           </>
         )}
-        {formatValue(
+        {formattingFn(
           Math.abs(
             isMaxLevel
               ? effect.currentLevelValue * effectModifier
               : effect.nextLevelValue * effectModifier,
           ),
+          effect.areEffectValuesRising,
         )}
       </span>
     </span>
@@ -242,7 +235,7 @@ const BuildingBenefit: React.FC<BuildingBenefitProps> = ({
 export const BuildingBenefits = () => {
   const { t } = useTranslation();
   const { building, buildingId } = use(BuildingCardContext);
-  const { buildingFieldId } = useRouteSegments();
+  const { buildingFieldId } = use(BuildingFieldContext);
   const { actualLevel, virtualLevel, doesBuildingExist } =
     useBuildingVirtualLevel(buildingId, buildingFieldId!);
 
